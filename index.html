@@ -67,12 +67,12 @@
                 <button type="submit" class="btn primary start">Start upload</button>
                 <button type="reset" class="btn info cancel">Cancel upload</button>
                 <button type="button" class="btn danger delete">Delete selected</button>
-                <input type="checkbox" class="toggle">
+                <input type="checkbox" class="toggle" id="select-all-files">
             </div>
         </div>
         <br>
         <div class="row">
-            <div class="span16">
+            <div class="span16" id="file-listing">
                 <table class="zebra-striped"><tbody class="files"></tbody></table>
             </div>
         </div>
@@ -150,7 +150,7 @@ var fileUploadErrors = {
             <td colspan="2"></td>
         {% } %}
         <td class="delete">
-            <button class="btn danger" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">Delete</button>
+            <button class="btn danger" disabled="disabled" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">Delete</button>
             <input type="checkbox" name="delete" value="1">
         </td>
     </tr>
@@ -170,6 +170,28 @@ var fileUploadErrors = {
 <script src="jquery.fileupload.js"></script>
 <script src="jquery.fileupload-ui.js"></script>
 <script src="application.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () {
+		$("#file-listing table").bind("click", function (e) {
+			if (e.target.nodeName === "INPUT" && e.target.name === "delete") {
+				hTarget = $(e.target);
+				if (hTarget.attr("checked") === "checked") {
+					hTarget.prev().removeAttr("disabled");
+				} else {
+					hTarget.prev().attr("disabled", "disabled");
+				}
+			}
+		});
+
+		$("#select-all-files").bind("click", function () {
+			if ($(this).attr("checked") === "checked") {
+				$("td.delete button").removeAttr("disabled");
+			} else {
+				$("td.delete button").attr("disabled", "disabled");
+			}
+		});
+	});
+</script>
 <!-- The XDomainRequest Transport is included for cross-domain file deletion for IE8+ -->
 <!--[if gte IE 8]><script src="cors/jquery.xdr-transport.js"></script><![endif]-->
 </body> 
