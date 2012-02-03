@@ -48,12 +48,12 @@
                 <button type="submit" class="btn primary start">Démarrer</button>
 		<button type="reset" class="btn info cancel">Annuler</button>
                 <button type="button" class="btn danger delete">Supprimer sélection</button>
-                <input type="checkbox" class="toggle">
+                <input type="checkbox" class="toggle" id="select-all-files">
             </div>
         </div>
         <br>
         <div class="row">
-            <div class="span16">
+            <div class="span16" id="file-listing">
                 <table class="zebra-striped"><tbody class="files"></tbody></table>
             </div>
         </div>
@@ -76,19 +76,19 @@
     </div>
     <div class="modal-body"></div>
     <div class="modal-footer">
-        <a class="btn primary next">Next</a>
-        <a class="btn info prev">Previous</a>
-        <a class="btn success download" target="_blank">Download</a>
+        <a class="btn primary next">Suivant</a>
+        <a class="btn info prev">Précédent</a>
+	<a class="btn success download" target="_blank">Télécharger</a>
     </div>
 </div>
 <script>
 var fileUploadErrors = {
-    maxFileSize: 'File is too big',
-    minFileSize: 'File is too small',
-    acceptFileTypes: 'Filetype not allowed',
+    maxFileSize: 'Fichier trop gros',
+    minFileSize: 'Fichier trop petit',
+    acceptFileTypes: 'Type de fichier non permis',
     maxNumberOfFiles: 'Max number of files exceeded',
-    uploadedBytes: 'Uploaded bytes exceed file size',
-    emptyResult: 'Empty file upload result'
+    uploadedBytes: 'La taille du fichier excède la taille spécifiée',
+    emptyResult: 'Aucun résultat'
 };
 </script>
 <script id="template-upload" type="text/html">
@@ -116,7 +116,7 @@ var fileUploadErrors = {
             <td></td>
             <td class="name">{%=file.name%}</td>
             <td class="size">{%=o.formatFileSize(file.size)%}</td>
-            <td class="error" colspan="2"><span class="label important">Error</span> {%=fileUploadErrors[file.error] || file.error%}</td>
+            <td class="error" colspan="2"><span class="label important">Erreur</span> {%=fileUploadErrors[file.error] || file.error%}</td>
         {% } else { %}
             <td class="preview">{% if (file.thumbnail_url) { %}
                 <a href="{%=file.url%}" title="{%=file.name%}" rel="gallery"><img src="{%=file.thumbnail_url%}"></a>
@@ -128,7 +128,7 @@ var fileUploadErrors = {
             <td colspan="2"></td>
         {% } %}
         <td class="delete">
-            <button class="btn danger" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">Supprimer</button>
+            <button class="btn danger" disabled="disabled" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">Supprimer</button>
             <input type="checkbox" name="delete" value="1">
         </td>
     </tr>
@@ -147,6 +147,28 @@ var fileUploadErrors = {
 <script src="jquery.fileupload.js"></script>
 <script src="jquery.fileupload-ui.js"></script>
 <script src="application.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () {
+		$("#file-listing table").bind("click", function (e) {
+			if (e.target.nodeName === "INPUT" && e.target.name === "delete") {
+				hTarget = $(e.target);
+				if (hTarget.attr("checked") === "checked") {
+					hTarget.prev().removeAttr("disabled");
+				} else {
+					hTarget.prev().attr("disabled", "disabled");
+				}
+			}
+		});
+
+		$("#select-all-files").bind("click", function () {
+			if ($(this).attr("checked") === "checked") {
+				$("td.delete button").removeAttr("disabled");
+			} else {
+				$("td.delete button").attr("disabled", "disabled");
+			}
+		});
+	});
+</script>
 <!-- The XDomainRequest Transport is included for cross-domain file deletion for IE8+ -->
 <!--[if gte IE 8]><script src="cors/jquery.xdr-transport.js"></script><![endif]-->
 </body> 
