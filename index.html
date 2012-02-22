@@ -163,7 +163,7 @@
 <!-- Confirmation de suppression de fichiers -->
 <script type="text/javascript">
 	$(document).ready(function () {
-		$("#file-listing table").bind("click", function (e) {
+		$("tbody.files").bind("click", function (e) {
 			if (e.target.nodeName === "INPUT" && e.target.name === "delete") {
 				hTarget = $(e.target);
 				if (hTarget.attr("checked") === "checked") {
@@ -174,7 +174,7 @@
 			}
 		});
 
-		$("#select-all-files").bind("click", function () {
+		$("#fileupload input.toggle").bind("click", function () {
 			if ($(this).attr("checked") === "checked") {
 				$("td.delete button").removeAttr("disabled");
 			} else {
