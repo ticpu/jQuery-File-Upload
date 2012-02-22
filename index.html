@@ -162,7 +162,13 @@
 <script src="external/load-image.min.js"></script>
 <!-- Confirmation de suppression de fichiers -->
 <script type="text/javascript">
-	$(document).ready(function () {
+$(window).load(function () {
+		/* Désactiver tous les boutons */
+		$("tbody.files td.delete button.btn-danger").attr("disabled", "disabled");
+});
+
+$(document).ready(function () {
+		/* La case après le bouton de suppression permet d'activer le bouton */
 		$("tbody.files").bind("click", function (e) {
 			if (e.target.nodeName === "INPUT" && e.target.name === "delete") {
 				hTarget = $(e.target);
@@ -174,6 +180,7 @@
 			}
 		});
 
+		/* Permet de sélectionner tous les boutons de suppressions */
 		$("#fileupload input.toggle").bind("click", function () {
 			if ($(this).attr("checked") === "checked") {
 				$("td.delete button").removeAttr("disabled");
@@ -181,7 +188,7 @@
 				$("td.delete button").attr("disabled", "disabled");
 			}
 		});
-	});
+});
 </script>
 <!-- The Canvas to Blob plugin is included for image resizing functionality -->
 <script src="external/canvas-to-blob.min.js"></script>
