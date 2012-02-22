@@ -145,7 +145,7 @@
             <td colspan="2"></td>
         {% } %}
         <td class="delete">
-            <button class="btn btn-danger" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">
+            <button class="btn btn-danger" disabled="disabled" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">
                 <i class="icon-trash icon-white"></i> {%=locale.fileupload.destroy%}
             </button>
             <input type="checkbox" name="delete" value="1">
@@ -162,11 +162,6 @@
 <script src="external/load-image.min.js"></script>
 <!-- Confirmation de suppression de fichiers -->
 <script type="text/javascript">
-$(window).load(function () {
-		/* Désactiver tous les boutons */
-		$("tbody.files td.delete button.btn-danger").attr("disabled", "disabled");
-});
-
 $(document).ready(function () {
 		/* La case après le bouton de suppression permet d'activer le bouton */
 		$("tbody.files").bind("click", function (e) {
