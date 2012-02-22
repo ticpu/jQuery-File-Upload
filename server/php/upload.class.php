@@ -1,6 +1,6 @@
 <?php
 /*
- * jQuery File Upload Plugin PHP Example 5.5
+ * jQuery File Upload Plugin PHP Class 5.7
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2010, Sebastian Tschan
@@ -10,18 +10,19 @@
  * http://www.opensource.org/licenses/MIT
  */
 
-error_reporting(E_ALL | E_STRICT);
-
 class UploadHandler
 {
-    private $options;
+    protected $options;
     
     function __construct($options=null) {
         $this->options = array(
-            'script_url' => $this->getFullUrl().'/'.basename(__FILE__),
-            'upload_dir' => dirname(__FILE__).'/files/',
+            'script_url' => $this->getFullUrl().'/',
+            'upload_dir' => dirname($_SERVER['SCRIPT_FILENAME']).'/files/',
             'upload_url' => $this->getFullUrl().'/files/',
             'param_name' => 'files',
+            // Set the following option to 'POST', if your server does not support
+            // DELETE requests. This is a parameter sent to the client:
+            'delete_type' => 'DELETE',
             // The php.ini settings upload_max_filesize and post_max_size
             // take precedence over the following max_file_size setting:
             'max_file_size' => null,
@@ -38,14 +39,14 @@ class UploadHandler
                 // their own upload directories:
                 /*
                 'large' => array(
-                    'upload_dir' => dirname(__FILE__).'/files/',
-                    'upload_url' => dirname($_SERVER['PHP_SELF']).'/files/',
+                    'upload_dir' => dirname($_SERVER['SCRIPT_FILENAME']).'/files/',
+                    'upload_url' => $this->getFullUrl().'/files/',
                     'max_width' => 1920,
                     'max_height' => 1200
                 ),
                 */
                 'thumbnail' => array(
-                    'upload_dir' => dirname(__FILE__).'/thumbnails/',
+                    'upload_dir' => dirname($_SERVER['SCRIPT_FILENAME']).'/thumbnails/',
                     'upload_url' => $this->getFullUrl().'/thumbnails/',
                     'max_width' => 80,
                     'max_height' => 80
@@ -57,7 +58,7 @@ class UploadHandler
         }
     }
 
-    function getFullUrl() {
+    protected function getFullUrl() {
       	return
         		(isset($_SERVER['HTTPS']) ? 'https://' : 'http://').
         		(isset($_SERVER['REMOTE_USER']) ? $_SERVER['REMOTE_USER'].'@' : '').
@@ -67,7 +68,16 @@ class UploadHandler
         		substr($_SERVER['SCRIPT_NAME'],0, strrpos($_SERVER['SCRIPT_NAME'], '/'));
     }
     
-    private function get_file_object($file_name) {
+    protected function set_file_delete_url($file) {
+        $file->delete_url = $this->options['script_url']
+            .'?file='.rawurlencode($file->name);
+        $file->delete_type = $this->options['delete_type'];
+        if ($file->delete_type !== 'DELETE') {
+            $file->delete_url .= '&_method=DELETE';
+        }
+    }
+    
+    protected function get_file_object($file_name) {
         $file_path = $this->options['upload_dir'].$file_name;
         if (is_file($file_path) && $file_name[0] !== '.') {
             $file = new stdClass();
@@ -80,22 +90,20 @@ class UploadHandler
                         .rawurlencode($file->name);
                 }
             }
-            $file->delete_url = $this->options['script_url']
-                .'?file='.rawurlencode($file->name);
-            $file->delete_type = 'DELETE';
+            $this->set_file_delete_url($file);
             return $file;
         }
         return null;
     }
     
-    private function get_file_objects() {
+    protected function get_file_objects() {
         return array_values(array_filter(array_map(
             array($this, 'get_file_object'),
             scandir($this->options['upload_dir'])
         )));
     }
 
-    private function create_scaled_image($file_name, $options) {
+    protected function create_scaled_image($file_name, $options) {
         $file_path = $this->options['upload_dir'].$file_name;
         $new_file_path = $options['upload_dir'].$file_name;
         list($img_width, $img_height) = @getimagesize($file_path);
@@ -148,7 +156,7 @@ class UploadHandler
         return $success;
     }
     
-    private function has_error($uploaded_file, $file, $error) {
+    protected function has_error($uploaded_file, $file, $error) {
         if ($error) {
             return $error;
         }
@@ -178,7 +186,7 @@ class UploadHandler
         return $error;
     }
     
-    private function trim_file_name($name, $type) {
+    protected function trim_file_name($name, $type) {
         // Remove path information and dots around the filename, to prevent uploading
         // into different directories or replacing hidden system files.
         // Also remove control characters and spaces (\x00..\x20) around the filename:
@@ -191,7 +199,7 @@ class UploadHandler
         return $file_name;
     }
 
-    private function orient_image($file_path) {
+    protected function orient_image($file_path) {
       	$exif = exif_read_data($file_path);
       	$orientation = intval(@$exif['Orientation']);
       	if (!in_array($orientation, array(3, 6, 8))) { 
@@ -217,7 +225,7 @@ class UploadHandler
       	return $success;
     }
     
-    private function handle_file_upload($uploaded_file, $name, $size, $type, $error) {
+    protected function handle_file_upload($uploaded_file, $name, $size, $type, $error) {
         $file = new stdClass();
         $file->name = $this->trim_file_name($name, $type);
         $file->size = intval($size);
@@ -264,9 +272,7 @@ class UploadHandler
                 $file->error = 'abort';
             }
             $file->size = $file_size;
-            $file->delete_url = $this->options['script_url']
-                .'?file='.rawurlencode($file->name);
-            $file->delete_type = 'DELETE';
+            $this->set_file_delete_url($file);
         } else {
             $file->error = $error;
         }
@@ -354,31 +360,4 @@ class UploadHandler
         echo json_encode($success);
     }
 
-}
-
-$upload_handler = new UploadHandler();
-
-header('Pragma: no-cache');
-header('Cache-Control: private, no-cache');
-header('Content-Disposition: inline; filename="files.json"');
-header('X-Content-Type-Options: nosniff');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: OPTIONS, HEAD, GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: X-File-Name, X-File-Type, X-File-Size');
-
-switch ($_SERVER['REQUEST_METHOD']) {
-    case 'OPTIONS':
-        break;
-    case 'HEAD':
-    case 'GET':
-        $upload_handler->get();
-        break;
-    case 'POST':
-        $upload_handler->post();
-        break;
-    case 'DELETE':
-        $upload_handler->delete();
-        break;
-    default:
-        header('HTTP/1.1 405 Method Not Allowed');
 }

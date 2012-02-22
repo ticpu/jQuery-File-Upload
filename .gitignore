@@ -1,2 +1,4 @@
-php/files/*
-php/thumbnails/*
+server/php/files/*
+server/php/thumbnails/*
+.DS_Store
+node_modules
