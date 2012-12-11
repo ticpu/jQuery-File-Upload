@@ -1,5 +1,5 @@
 /*
- * jQuery File Upload Plugin JS Example 6.5
+ * jQuery File Upload Plugin JS Example 6.11
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2010, Sebastian Tschan
@@ -16,7 +16,11 @@ $(function () {
     'use strict';
 
     // Initialize the jQuery File Upload widget:
-    $('#fileupload').fileupload();
+    $('#fileupload').fileupload({
+        // Uncomment the following to send cross-domain cookies:
+        //xhrFields: {withCredentials: true},
+        url: 'server/php/'
+    });
 
     // Enable iframe cross-domain access via redirect option:
     $('#fileupload').fileupload(
@@ -34,11 +38,24 @@ $(function () {
             url: '//jquery-file-upload.appspot.com/',
             maxFileSize: 5000000,
             acceptFileTypes: /(\.|\/)(gif|jpe?g|png)$/i,
-            resizeMaxWidth: 1920,
-            resizeMaxHeight: 1200
+            process: [
+                {
+                    action: 'load',
+                    fileTypes: /^image\/(gif|jpeg|png)$/,
+                    maxFileSize: 20000000 // 20MB
+                },
+                {
+                    action: 'resize',
+                    maxWidth: 1440,
+                    maxHeight: 900
+                },
+                {
+                    action: 'save'
+                }
+            ]
         });
         // Upload server status check for browsers with CORS support:
-        if ($.ajaxSettings.xhr().withCredentials !== undefined) {
+        if ($.support.cors) {
             $.ajax({
                 url: '//jquery-file-upload.appspot.com/',
                 type: 'HEAD'
@@ -51,14 +68,17 @@ $(function () {
         }
     } else {
         // Load existing files:
-        $('#fileupload').each(function () {
-            var that = this;
-            $.getJSON(this.action, function (result) {
-                if (result && result.length) {
-                    $(that).fileupload('option', 'done')
-                        .call(that, null, {result: result});
-                }
-            });
+        $.ajax({
+            // Uncomment the following to send cross-domain cookies:
+            //xhrFields: {withCredentials: true},
+            url: $('#fileupload').fileupload('option', 'url'),
+            dataType: 'json',
+            context: $('#fileupload')[0]
+        }).done(function (result) {
+            if (result && result.length) {
+                $(this).fileupload('option', 'done')
+                    .call(this, null, {result: result});
+            }
         });
     }
 

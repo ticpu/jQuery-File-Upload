@@ -1,4 +1,5 @@
 server/php/files/*
 server/php/thumbnails/*
 .DS_Store
+*.pyc
 node_modules

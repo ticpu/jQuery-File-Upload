@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * jQuery File Upload Plugin Node.js Example 1.0
+ * jQuery File Upload Plugin Node.js Example 1.0.4
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2012, Sebastian Tschan
@@ -10,14 +10,15 @@
  * http://www.opensource.org/licenses/MIT
  */
 
-/*jslint nomen: true, regexp: true */
-/*global require, __dirname, unescape */
+/*jslint nomen: true, regexp: true, unparam: true, stupid: true */
+/*global require, __dirname, unescape, console */
 
 (function (port) {
     'use strict';
-    var util = require('util'),
-        path = require('path'),
+    var path = require('path'),
         fs = require('fs'),
+        // Since Node 0.8, .existsSync() moved from path to fs:
+        _existsSync = fs.existsSync || path.existsSync,
         formidable = require('formidable'),
         nodeStatic = require('node-static'),
         imageMagick = require('imagemagick'),
@@ -26,9 +27,9 @@
             publicDir: __dirname + '/public',
             uploadDir: __dirname + '/public/files',
             uploadUrl: '/files/',
-            maxPostSize: 500000000, // 500 MB
+            maxPostSize: 11000000000, // 11 GB
             minFileSize: 1,
-            maxFileSize: 100000000, // 100 MB
+            maxFileSize: 10000000000, // 10 GB
             acceptFileTypes: /.+/i,
             // Files not matched by this regular expression force a download dialog,
             // to prevent executing any scripts in the context of the service domain:
@@ -82,11 +83,23 @@
                 'Access-Control-Allow-Methods',
                 options.accessControl.allowMethods
             );
-            var handleResult = function (result) {
-                    var contentType = req.headers.accept.indexOf('application/json') !== -1 ?
-                            'application/json' : 'text/plain';
-                    res.writeHead(200, {'Content-Type': contentType});
-                    res.end(JSON.stringify(result));
+            var handleResult = function (result, redirect) {
+                    if (redirect) {
+                        res.writeHead(302, {
+                            'Location': redirect.replace(
+                                /%s/,
+                                encodeURIComponent(JSON.stringify(result))
+                            )
+                        });
+                        res.end();
+                    } else {
+                        res.writeHead(200, {
+                            'Content-Type': req.headers.accept
+                                .indexOf('application/json') !== -1 ?
+                                        'application/json' : 'text/plain'
+                        });
+                        res.end(JSON.stringify(result));
+                    }
                 },
                 setNoCacheHeaders = function () {
                     res.setHeader('Pragma', 'no-cache');
@@ -139,11 +152,11 @@
     };
     FileInfo.prototype.validate = function () {
         if (options.minFileSize && options.minFileSize > this.size) {
-            this.error = 'minFileSize';
+            this.error = 'File is too small';
         } else if (options.maxFileSize && options.maxFileSize < this.size) {
-            this.error = 'maxFileSize';
+            this.error = 'File is too big';
         } else if (!options.acceptFileTypes.test(this.name)) {
-            this.error = 'acceptFileTypes';
+            this.error = 'Filetype not allowed';
         }
         return !this.error;
     };
@@ -151,7 +164,7 @@
         // Prevent directory traversal and creating hidden system files:
         this.name = path.basename(this.name).replace(/^\.+/, '');
         // Prevent overwriting existing files:
-        while (path.existsSync(options.uploadDir + '/' + this.name)) {
+        while (_existsSync(options.uploadDir + '/' + this.name)) {
             this.name = this.name.replace(nameCountRegexp, nameCountFunc);
         }
     };
@@ -162,7 +175,7 @@
                     '//' + req.headers.host + options.uploadUrl;
             this.url = this.delete_url = baseUrl + encodeURIComponent(this.name);
             Object.keys(options.imageVersions).forEach(function (version) {
-                if (path.existsSync(
+                if (_existsSync(
                         options.uploadDir + '/' + version + '/' + that.name
                     )) {
                     that[version + '_url'] = baseUrl + version + '/' +
@@ -197,13 +210,14 @@
             files = [],
             map = {},
             counter = 1,
+            redirect,
             finish = function () {
                 counter -= 1;
                 if (!counter) {
                     files.forEach(function (fileInfo) {
                         fileInfo.initUrls(handler.req);
                     });
-                    handler.callback(files);
+                    handler.callback(files, redirect);
                 }
             };
         form.uploadDir = options.tmpDir;
@@ -213,6 +227,10 @@
             fileInfo.safeName();
             map[path.basename(file.path)] = fileInfo;
             files.push(fileInfo);
+        }).on('field', function (name, value) {
+            if (name === 'redirect') {
+                redirect = value;
+            }
         }).on('file', function (name, file) {
             var fileInfo = map[path.basename(file.path)];
             fileInfo.size = file.size;
@@ -238,6 +256,8 @@
             tmpFiles.forEach(function (file) {
                 fs.unlink(file);
             });
+        }).on('error', function (e) {
+            console.log(e);
         }).on('progress', function (bytesReceived, bytesExpected) {
             if (bytesReceived > options.maxPostSize) {
                 handler.req.connection.destroy();
@@ -264,4 +284,4 @@
     } else {
         require('http').createServer(serve).listen(port);
     }
-}(8080));
+}(8888));
