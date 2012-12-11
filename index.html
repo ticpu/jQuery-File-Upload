@@ -53,17 +53,21 @@
             <div class="span7">
                 <!-- The fileinput-button span is used to style the file input field as button -->
                 <span class="btn btn-success fileinput-button">
-                    <span class="icon-plus icon-white"></span><span> Ajouter des fichiers...</span>
+                    <i class="icon-plus icon-white"></i>
+                    <span>Ajouter des fichiers...</span>
                     <input type="file" name="files[]" multiple>
                 </span>
                 <button type="submit" class="btn btn-primary start">
-                    <span class="icon-upload icon-white"></span><span> Démarrer </span>
+                    <i class="icon-upload icon-white"></i>
+                    <span>Démarrer</span>
                 </button>
                 <button type="reset" class="btn btn-warning cancel">
-                    <span class="icon-ban-circle icon-white"></span><span> Annuler </span>
+                    <i class="icon-ban-circle icon-white"></i>
+                    <span>Annuler</span>
                 </button>
                 <button type="button" class="btn btn-danger delete">
-                    <span class="icon-trash icon-white"></span><span> Supprimer </span>
+                    <i class="icon-trash icon-white"></i>
+                    <span>Supprimer</span>
                 </button>
                 <input type="checkbox" class="toggle">
             </div>
@@ -171,7 +175,7 @@
         <td class="delete">
             <button class="btn btn-danger" disabled="disabled" data-type="{%=file.delete_type%}" data-url="{%=file.delete_url%}">
                 <i class="icon-trash icon-white"></i>
-                <span>Delete</span>
+                <span>Supprimer</span>
             </button>
             <input type="checkbox" name="delete" value="1">
         </td>
