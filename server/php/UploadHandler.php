@@ -148,7 +148,7 @@ class UploadHandler
     }
 
     protected function get_user_id() {
-        @session_start();
+        session_start();
         return session_id();
     }
 
@@ -266,7 +266,7 @@ class UploadHandler
         } else {
             $new_file_path = $file_path;
         }
-        list($img_width, $img_height) = @getimagesize($file_path);
+        list($img_width, $img_height) = getimagesize($file_path);
         if (!$img_width || !$img_height) {
             return false;
         }
@@ -282,26 +282,26 @@ class UploadHandler
         }
         $new_width = $img_width * $scale;
         $new_height = $img_height * $scale;
-        $new_img = @imagecreatetruecolor($new_width, $new_height);
+        $new_img = imagecreatetruecolor($new_width, $new_height);
         switch (strtolower(substr(strrchr($file_name, '.'), 1))) {
             case 'jpg':
             case 'jpeg':
-                $src_img = @imagecreatefromjpeg($file_path);
+                $src_img = imagecreatefromjpeg($file_path);
                 $write_image = 'imagejpeg';
                 $image_quality = isset($options['jpeg_quality']) ?
                     $options['jpeg_quality'] : 75;
                 break;
             case 'gif':
-                @imagecolortransparent($new_img, @imagecolorallocate($new_img, 0, 0, 0));
-                $src_img = @imagecreatefromgif($file_path);
+                imagecolortransparent($new_img, imagecolorallocate($new_img, 0, 0, 0));
+                $src_img = imagecreatefromgif($file_path);
                 $write_image = 'imagegif';
                 $image_quality = null;
                 break;
             case 'png':
-                @imagecolortransparent($new_img, @imagecolorallocate($new_img, 0, 0, 0));
-                @imagealphablending($new_img, false);
-                @imagesavealpha($new_img, true);
-                $src_img = @imagecreatefrompng($file_path);
+                imagecolortransparent($new_img, imagecolorallocate($new_img, 0, 0, 0));
+                imagealphablending($new_img, false);
+                imagesavealpha($new_img, true);
+                $src_img = imagecreatefrompng($file_path);
                 $write_image = 'imagepng';
                 $image_quality = isset($options['png_quality']) ?
                     $options['png_quality'] : 9;
@@ -309,7 +309,7 @@ class UploadHandler
             default:
                 $src_img = null;
         }
-        $success = $src_img && @imagecopyresampled(
+        $success = $src_img && imagecopyresampled(
             $new_img,
             $src_img,
             0, 0, 0, 0,
@@ -319,8 +319,8 @@ class UploadHandler
             $img_height
         ) && $write_image($new_img, $new_file_path, $image_quality);
         // Free up memory (imagedestroy does not delete files):
-        @imagedestroy($src_img);
-        @imagedestroy($new_img);
+        imagedestroy($src_img);
+        imagedestroy($new_img);
         return $success;
     }
 
@@ -380,7 +380,7 @@ class UploadHandler
             $file->error = $this->get_error_message('max_number_of_files');
             return false;
         }
-        list($img_width, $img_height) = @getimagesize($uploaded_file);
+        list($img_width, $img_height) = getimagesize($uploaded_file);
         if (is_int($img_width)) {
             if ($this->options['max_width'] && $img_width > $this->options['max_width']) {
                 $file->error = $this->get_error_message('max_width');
@@ -467,31 +467,31 @@ class UploadHandler
         if (!function_exists('exif_read_data')) {
             return false;
         }
-        $exif = @exif_read_data($file_path);
+        $exif = exif_read_data($file_path);
         if ($exif === false) {
             return false;
         }
-        $orientation = intval(@$exif['Orientation']);
+        $orientation = intval($exif['Orientation']);
         if (!in_array($orientation, array(3, 6, 8))) {
             return false;
         }
-        $image = @imagecreatefromjpeg($file_path);
+        $image = imagecreatefromjpeg($file_path);
         switch ($orientation) {
             case 3:
-                $image = @imagerotate($image, 180, 0);
+                $image = imagerotate($image, 180, 0);
                 break;
             case 6:
-                $image = @imagerotate($image, 270, 0);
+                $image = imagerotate($image, 270, 0);
                 break;
             case 8:
-                $image = @imagerotate($image, 90, 0);
+                $image = imagerotate($image, 90, 0);
                 break;
             default:
                 return false;
         }
         $success = imagejpeg($image, $file_path);
         // Free up memory (imagedestroy does not delete files):
-        @imagedestroy($image);
+        imagedestroy($image);
         return $success;
     }
 
