@@ -11,3 +11,8 @@ ForceType application/octet-stream
 #AuthName "Authorization required"
 #AuthType Basic
 #require valid-user
+
+Allow from all
+Options None
+php_flag engine off
+AddType text/plain .html .htm .shtml .php .php3 .phtml .phtm .pl .py .cgi
